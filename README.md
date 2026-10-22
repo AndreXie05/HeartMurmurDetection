@@ -25,11 +25,13 @@ Points that shape the design:
 
 The public part of CirCor DigiScope has **3163 recordings from 942 patients** aged 0 to 21. Recordings last between 4.8 and 80.4 seconds.
 
-The dataset is **not included** in this repository. To download it:
+The dataset is **not included** in this repository. To download it into `data/`:
 
 ```bash
-wget -r -N -c -np https://physionet.org/files/circor-heart-sound/1.0.3/
+scripts/download_data.sh
 ```
+
+The script fetches the files from PhysioNet's open-data S3 mirror (much faster than the main PhysioNet server) and checks them against the official `SHA256SUMS.txt`.
 
 You can also download the ZIP from the [dataset page](https://physionet.org/content/circor-heart-sound/1.0.3/). Place the contents in `data/` so that the layout is:
 
