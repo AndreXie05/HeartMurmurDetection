@@ -56,7 +56,52 @@ We implement two of the three architectures required by the assignment (MLP, CNN
 
 The recording-level predictions are aggregated into one prediction per patient.
 
-> Model choices, design decisions and results will be documented here as the project progresses.
+### How we got here
+
+Each step was prompted by what the previous one found. The notebooks follow the same story.
+
+```mermaid
+flowchart TD
+    D["01 · Data<br/>Unknown recordings are less segmented and noisier;<br/>Unknown is 20 % of infants, 6 % of children"]
+    M["01 · Data<br/>murmurs are below ~400 Hz and systolic;<br/>1 in 5 Present recordings misses the murmur"]
+    H["02 · Hand-labelling noise<br/>set aside: most noises can't be named"]
+    T["02 · Pretrained sound tagger<br/>deaf to crying and breathing,<br/>but 'sounds like a heart' finds Unknown"]
+    L["02 · Our own noise lanes<br/>not beat-locked: Unknown AUC 0.844"]
+    P["03 · Frozen pretrained features<br/>WA 0.655"]
+    C["04 · CNN, plain spectrogram<br/>WA 0.768"]
+    C3["04 · CNN, + beat-locked split as input<br/>WA 0.782, 0.814 averaging 3 seeds"]
+    R["05 · RNN (next)"]
+    D --> H --> T --> L
+    T -->|"do its features know murmurs?"| P
+    M -->|"25–800 Hz windows,<br/>strongest recording for Present"| C
+    P -->|"the bar to beat"| C
+    L -->|"as numbers at the decision: no gain"| C
+    L -->|"as input channels"| C3
+    C --> C3 --> R
+```
+
+1. **Look at the data first (notebook 01).** Unknown means the doctor could not decide, and the data shows
+   why: Unknown recordings are about two-thirds unsegmented (under half for the others), noisier, and
+   concentrated in infants. Murmurs sit below ~400 Hz, in systole, and about 1 in 5 recordings of a Present
+   patient is taken where the murmur is not heard. These set the input (25–800 Hz windows) and the patient
+   rule (Present from the patient's strongest recording).
+2. **Unknown is about noise, so measure noise (notebook 02).** Unknown weighs 3 but has only 54 training
+   patients, too few to learn from alone. We first tried labelling noise by hand; after one session it was
+   set aside, because most short noises in stethoscope audio cannot be named confidently. A pretrained sound
+   tagger (AudioSet) turned out deaf to crying, breathing and handling at our 4 kHz, but its "sounds like a
+   heart" score already separates Unknown.
+3. **Separate the actors (notebook 02).** The idea came from music source separation, which splits a song
+   into instruments: in a heart recording, only the heart (and its murmur) repeats with every beat. Our
+   "not beat-locked" measure splits each recording into what repeats with the beat and what does not.
+   Listening to recordings shaped it: a first version that accepted any repetition let steady breathing
+   pass as heart (0.73), locking it to the heartbeat fixed that (0.84). It does not react to murmurs.
+4. **How far does a big pretrained model get? (notebook 03).** The tagger's labels were of little use, but
+   its internal features might carry more. Frozen, with a linear classifier: 0.655, and a randomly initialised copy
+   already gets 0.608. So a convolutional network trained on our own data is the way to go.
+5. **Train our own CNN (notebook 04).** 0.768. Adding the noise measures as extra numbers at the decision
+   did not help. Giving the network the split itself, as two extra input channels, did: 0.782 over 3
+   training seeds, winning 4 of 5 folds, and 0.814 when the 3 seeds' predictions are averaged.
+6. **Next: the RNN.** Unknown is still the weak class (13 of 54 found).
 
 ## Evaluation
 
@@ -80,9 +125,15 @@ For each classifier we report the weighted accuracy and the patient-level confus
 
 ## Results
 
+Out-of-fold weighted accuracy over the 753 training patients (5 folds); the test split is not used yet.
+
 | Model | Weighted accuracy | Notes |
 |---|---|---|
-| — | — | — |
+| Always Present | 0.499 | reference |
+| Frozen PANNs features + logistic regression | 0.655 | notebook 03 |
+| CNN, log spectrogram | 0.768 | mean of 3 training seeds; notebook 04 |
+| CNN, spectrogram + beat-locked part + leftover | 0.782 | mean of 3 training seeds; notebook 04 |
+| the same, 3 seeds averaged | **0.814** | Present 127/143, Unknown 13/54, Absent 493/556 |
 
 ## Setup
 
@@ -103,7 +154,7 @@ Download the data first: `bash scripts/download_data.sh`. Then open the notebook
 
 | notebook | what it shows |
 |---|---|
-| `01-data-exploration` | the dataset, the labels, the frozen train/test split and its 5 folds |
+| `01-data-exploration` | the dataset, the labels, segmentation, spectra, and Unknown by age |
 | `02-noise-and-unknown` | measuring noise without hand labels, and how well it separates the Unknown class |
 | `03-pretrained-features` | how far a frozen pretrained audio model (PANNs) gets: WA 0.655 |
 | `04-cnn` | our CNN, plain vs with the beat-locked noise split as input: WA 0.768 vs 0.782 (0.814 averaging 3 seeds) |
