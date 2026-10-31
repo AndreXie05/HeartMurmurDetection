@@ -1,0 +1,11 @@
+# conda env create -f environment.yml && conda activate hmd
+# Conda provides Python only; the packages come from requirements.txt (see the note there).
+name: hmd
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - -r requirements.txt
+      - -e .

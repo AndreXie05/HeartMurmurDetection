@@ -89,14 +89,28 @@ For each classifier we report the weighted accuracy and the patient-level confus
 ```bash
 git clone https://github.com/AndreXie05/HeartMurmurDetection.git
 cd HeartMurmurDetection
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+conda env create -f environment.yml
+conda activate hmd
 ```
+
+This installs the dependencies (exact versions in `requirements.txt`) and the project's `murmur`
+package, so the notebooks can `import murmur`. Without conda, in any Python 3.12 environment:
+`pip install -r requirements.txt && pip install -e .`
 
 ## Usage
 
-> Instructions to train the models and reproduce the reported results will be added here.
+Download the data first: `bash scripts/download_data.sh`. Then open the notebooks in order:
+
+| notebook | what it shows |
+|---|---|
+| `01-data-exploration` | the dataset, the labels, the frozen train/test split and its 5 folds |
+| `02-noise-and-unknown` | measuring noise without hand labels, and how well it separates the Unknown class |
+| `03-pretrained-features` | how far a frozen pretrained audio model (PANNs) gets: WA 0.655 |
+| `04-cnn` | our CNN, plain vs with the beat-locked noise split as input: WA 0.768 vs 0.782 (0.814 averaging 3 seeds) |
+
+Each notebook reads stored results from `results/` (tables and the trained CNN weights) and runs in
+minutes; set `RECOMPUTE = True` at the top to redo the computation (some steps need a GPU). All scores are
+cross-validated on the training patients; the test split is not used yet.
 
 ## Team
 
