@@ -1,0 +1,37 @@
+[
+ {
+  "fold": 0,
+  "best_epoch": 6,
+  "epochs_run": 14,
+  "inner_val_wa": 0.8497109826589595,
+  "seconds": 170.0120301246643
+ },
+ {
+  "fold": 1,
+  "best_epoch": 1,
+  "epochs_run": 9,
+  "inner_val_wa": 0.7514450867052023,
+  "seconds": 109.38336062431335
+ },
+ {
+  "fold": 2,
+  "best_epoch": 9,
+  "epochs_run": 17,
+  "inner_val_wa": 0.8514285714285714,
+  "seconds": 203.15347170829773
+ },
+ {
+  "fold": 3,
+  "best_epoch": 6,
+  "epochs_run": 14,
+  "inner_val_wa": 0.8092485549132948,
+  "seconds": 166.14184045791626
+ },
+ {
+  "fold": 4,
+  "best_epoch": 5,
+  "epochs_run": 13,
+  "inner_val_wa": 0.7485714285714286,
+  "seconds": 156.1709234714508
+ }
+]

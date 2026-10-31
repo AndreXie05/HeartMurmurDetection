@@ -1,0 +1,19 @@
+# Exact versions so the reported results can be reproduced. Install through environment.yml
+# (conda), or directly with `pip install -r requirements.txt` in any Python 3.12 environment.
+# PyTorch is installed with pip: it no longer publishes conda packages. The default Linux wheel
+# includes CUDA; for CPU-only, add  --index-url https://download.pytorch.org/whl/cpu
+torch==2.14.1
+torchaudio==2.11.0
+librosa==1.0.0
+soundfile==0.14.0
+numpy==2.5.4
+pandas==3.0.6
+scipy==1.18.1
+scikit-learn==1.9.1
+matplotlib==3.11.2
+seaborn==0.13.2
+jupyterlab==4.6.4
+ipykernel==7.4.0
+# a pretrained AudioSet model (murmur/preprocess/audioset.py); downloads a ~300 MB checkpoint on first use
+panns_inference==0.1.1
+torchlibrosa==0.1.0

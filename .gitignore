@@ -29,3 +29,7 @@ checkpoints/
 .Rhistory
 .RData
 .Rproj.user/
+*.egg-info/
+
+# Stored results the notebooks read (small tables and the trained CNN weights) are committed
+!results/**/*.pt
