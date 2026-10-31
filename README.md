@@ -103,6 +103,26 @@ flowchart TD
    training seeds, winning 4 of 5 folds, and 0.814 when the 3 seeds' predictions are averaged.
 6. **Next: the RNN.** Unknown is still the weak class (13 of 54 found).
 
+### Next steps and ideas not tried yet
+
+Where we stand: 0.782 for one 3-channel CNN, 0.814 averaging 3 seeds, cross-validated. The best team of the
+2022 challenge scored 0.780 on the hidden test set. Cross-validation on the public data tends to read
+higher than a hidden set, so this is promising, not proven. Our frozen test split gives the honest number
+once, at the end. Present is found well (127 of 143); **Unknown is the weak class (13 of 54)**.
+
+| idea | why it might help | status |
+|---|---|---|
+| **The RNN** (required: two of MLP/CNN/RNN) | Reads the recording as a sequence of heart cycles instead of independent 3 s windows | next |
+| **Recording-level labels from the murmur locations** | Today every recording inherits its patient's label. But about 1 in 5 recordings of a Present patient is taken where the doctor did *not* hear the murmur (notebook 01), so the network is taught "Present" on audio without a murmur. The CSV says which locations carry it: train Present only on those, and drop or relabel the rest. A label-noise fix; cheap (3 seeds, about 1 h of GPU) | first to try on the CNN |
+| **Murmur details as extra training targets** | Timing, grade, pitch and shape are given for every Present patient. Small extra outputs predicting them teach the network what a murmur sounds like from more than one label | ask the teacher: the spec says to use only the `Murmur` label |
+| **Recording location** as an input or in the aggregation | AV and MV recordings are noisier (notebook 01) | to try |
+| **Age** for Unknown | Unknown is 20 % of infants vs 6 % of children (notebook 01) | ask the teacher: metadata as input? |
+| Rebalancing the decision afterwards (thresholds, or a "fair rank" style correction for the rare classes) | Finds more Present and Unknown, but the loss is already weighted 5/3/1 like the metric, and tuned thresholds scored *lower* (0.798 vs 0.814, notebook 04). More recall of rare classes, no gain in the score | not planned |
+
+Not usable: the `Outcome` column (from an echocardiogram) is a different label, and the spec rules it out.
+As far as we know, one expert labelled each patient's murmur, so methods that model disagreement between
+several annotators do not apply here.
+
 ## Evaluation
 
 ### Protocol
