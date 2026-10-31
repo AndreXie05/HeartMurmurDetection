@@ -57,6 +57,19 @@ def table(recording_ids, workers: int = 4) -> pd.DataFrame:
     return pd.DataFrame(rows).set_index("recording_id").loc[list(recording_ids)]
 
 
+def _any_repetition(rid: str) -> float:
+    return float(np.median(noise.not_beat_locked(circor.audio(_recordings().loc[rid]))))
+
+
+def any_repetition(recording_ids, workers: int = 4) -> pd.Series:
+    """The first version of the not-beat-locked baseline, kept for comparison: each moment is compared
+    with the most similar moments anywhere in the recording (REPET-SIM), not with the same point in the
+    neighbouring beats. Steady breathing repeats too, so it passes as heart. Median per recording."""
+    with Pool(workers) as pool:
+        values = pool.map(_any_repetition, list(recording_ids), chunksize=8)
+    return pd.Series(values, index=list(recording_ids), name="nbl_median").rename_axis("recording_id")
+
+
 def per_patient(recording_table: pd.DataFrame, patient_of: pd.Series) -> pd.DataFrame:
     return recording_table.groupby(patient_of.loc[recording_table.index].to_numpy()).mean()
 
