@@ -70,7 +70,7 @@ flowchart TD
     P["03 · Frozen pretrained features<br/>WA 0.655"]
     C["04 · CNN, plain spectrogram<br/>WA 0.768"]
     C3["04 · CNN, + beat-locked split as input<br/>WA 0.782, 0.814 averaging 3 seeds"]
-    R["05 · RNN (next)"]
+    R["05 · RNN (bidirectional GRU), same input<br/>WA 0.803, 0.816 averaging 3 seeds;<br/>CNN + GRU averaged 0.819"]
     D --> H --> T --> L
     T -->|"do its features know murmurs?"| P
     M -->|"25–800 Hz windows,<br/>strongest recording for Present"| C
@@ -101,18 +101,21 @@ flowchart TD
 5. **Train our own CNN (notebook 04).** 0.768. Adding the noise measures as extra numbers at the decision
    did not help. Giving the network the split itself, as two extra input channels, did: 0.782 over 3
    training seeds, winning 4 of 5 folds, and 0.814 when the 3 seeds' predictions are averaged.
-6. **Next: the RNN.** Unknown is still the weak class (13 of 54 found).
+6. **The RNN (notebook 05).** A bidirectional GRU reads the same 3-channel windows as a sequence of
+   spectrogram columns; only the network changes. One GRU beats one CNN on all 5 folds (0.803 against 0.782);
+   averaged over 3 seeds they tie (0.816 against 0.814), and averaging the two networks gives 0.819. Unknown
+   is still the weak class (13 of 54 found).
 
 ### Next steps and ideas not tried yet
 
-Where we stand: 0.782 for one 3-channel CNN, 0.814 averaging 3 seeds, cross-validated. The best team of the
+Where we stand: 0.782 for one 3-channel CNN and 0.803 for one GRU; 0.814 and 0.816 averaging 3 seeds, 0.819 averaging both networks, cross-validated. The best team of the
 2022 challenge scored 0.780 on the hidden test set. Cross-validation on the public data tends to read
 higher than a hidden set, so this is promising, not proven. Our frozen test split gives the honest number
 once, at the end. Present is found well (127 of 143); **Unknown is the weak class (13 of 54)**.
 
 | idea | why it might help | status |
 |---|---|---|
-| **The RNN** (required: two of MLP/CNN/RNN) | Reads the recording as a sequence of heart cycles instead of independent 3 s windows | next |
+| **An RNN over heart cycles** | The GRU (notebook 05) still reads independent 3 s windows. One step per heart cycle over the whole recording would see whether a murmur repeats from beat to beat and how steady the noise is (Unknown) | to try |
 | **Recording-level labels from the murmur locations** | Today every recording inherits its patient's label. But about 1 in 5 recordings of a Present patient is taken where the doctor did *not* hear the murmur (notebook 01), so the network is taught "Present" on audio without a murmur. The CSV says which locations carry it: train Present only on those, and drop or relabel the rest. A label-noise fix; cheap (3 seeds, about 1 h of GPU) | first to try on the CNN |
 | **Murmur details as extra training targets** | Timing, grade, pitch and shape are given for every Present patient. Small extra outputs predicting them teach the network what a murmur sounds like from more than one label | ask the teacher: the spec says to use only the `Murmur` label |
 | **Recording location** as an input or in the aggregation | AV and MV recordings are noisier (notebook 01) | to try |
@@ -178,8 +181,9 @@ Download the data first: `bash scripts/download_data.sh`. Then open the notebook
 | `02-noise-and-unknown` | measuring noise without hand labels, and how well it separates the Unknown class |
 | `03-pretrained-features` | how far a frozen pretrained audio model (PANNs) gets: WA 0.655 |
 | `04-cnn` | our CNN, plain vs with the beat-locked noise split as input: WA 0.768 vs 0.782 (0.814 averaging 3 seeds) |
+| `05-rnn` | a bidirectional GRU on the same input: WA 0.803 vs the CNN's 0.782 (0.816 vs 0.814 averaging 3 seeds; 0.819 averaging both) |
 
-Each notebook reads stored results from `results/` (tables and the trained CNN weights) and runs in
+Each notebook reads stored results from `results/` (tables and the trained CNN and GRU weights) and runs in
 minutes; set `RECOMPUTE = True` at the top to redo the computation (some steps need a GPU). All scores are
 cross-validated on the training patients; the test split is not used yet.
 
